@@ -1,5 +1,6 @@
 import datetime
 import os
+from threading import Event
 
 
 class Logger:
@@ -10,7 +11,7 @@ class Logger:
     _path = None
 
     def __init__(self, filename='main', directory='', logtype='info', timestamp='%Y-%m-%d | %H:%M:%S.%f',
-                 logformat='[{timestamp}] {logtype}: {message}', prefix='', postfix='', title='Main Logger',
+                 logformat='[{timestamp}] {logtype}:   {message}', prefix='', postfix='', title='Main Logger',
                  logexists='append', console=False):
         """Initialization method
 
@@ -35,7 +36,8 @@ class Logger:
         self.filename = filename
         self.directory = directory
         # available log methods:
-        self._logtypes = ['info', 'warning', 'error', 'fatal']
+        self._logtypes = {'info': 'INFO        ', 'warning': '  WARNING   ',
+                          'error': '    ERROR   ', 'fatal': '       FATAL'}
         self.logtype = logtype
         # timestamp format
         self.timestamp = timestamp
@@ -49,6 +51,7 @@ class Logger:
         # log-exists actions
         self._ifexists = {'append': self._append, 'overwrite': self._overwrite, 'rename': self._rename}
         self.logexists = logexists
+        self._exit_flag = Event()
         # resume logger
         self.resume()
 
@@ -78,12 +81,12 @@ class Logger:
 
     @property
     def logtype(self):
-        return self._logtype
+        return list([key for key, exists in self._logtypes.items() if exists is self._logtype])[0]
 
     @logtype.setter
     def logtype(self, value):
-        assert value in self._logtypes
-        self._logtype = value
+        assert value in self._logtypes.keys()
+        self._logtype = self._logtypes[value]
 
     @property
     def timestamp(self):
@@ -96,7 +99,7 @@ class Logger:
 
     @property
     def logformat(self):
-        return self._logformat.format(timestamp=self.timestamp, logtype=self.logtype, message='logformat test',
+        return self._logformat.format(timestamp=self.timestamp, logtype=self._logtype, message='logformat test',
                                       prefix=self.prefix, postfix=self.postfix)
 
     @logformat.setter
@@ -211,10 +214,11 @@ class Logger:
                     print(f'  LOGGER: {self.filename}')
                     print(log)
         else:
-            if logtype is '':
-                logtype = self.logtype
+            if logtype is not '':
+                self.logtype = logtype
             with open(self._path, 'a') as file:
-                log = self._logformat.format(timestamp=self.timestamp, logtype=logtype.upper(), message=msg, prefix=self.prefix, postfix=self.postfix)
+                log = self._logformat.format(timestamp=self.timestamp, logtype=self._logtype, message=msg,
+                                             prefix=self.prefix, postfix=self.postfix)
                 print(log, file=file)
                 if self._console:
                     print(f'  LOGGER: {self.filename}')
@@ -228,21 +232,29 @@ class Logger:
         self.log('! --- FILE OVERWRITTEN --- ')
 
     def _rename(self):
-        filename = self.filename[:-4]
-        num = 0
-        i = 0
-        for sign in reversed(filename):
-            try:
-                num += int(sign) * 10 ** (-i)
-                i -= 1
-            except ValueError:
-                if i != 0:
-                    self.filename = f'{filename[:i]}{num+1}'
-                else:
-                    self.filename = f'{filename}_{num+1}'
-                break
-        self._path = f'{self.directory}{self.filename}'
+        while os.path.isfile(self._path):
+            filename = self.filename[:-4]
+            num = 0
+            i = 0
+            for sign in reversed(filename):
+                try:
+                    num += int(sign) * 10 ** (-i)
+                    i -= 1
+                except ValueError:
+                    if i != 0:
+                        self.filename = f'{filename[:i]}{num+1}'
+                    else:
+                        self.filename = f'{filename}_{num+1}'
+                    break
+            self._path = f'{self.directory}{self.filename}'
         self.log('! --- FILE RENAMED --- ')
 
+    def exit(self):
+        self._exit_flag.set()
+
     def run(self):
-        pass
+        try:
+            while not self._exit_flag.wait(timeout=10):
+                pass
+        except Exception as ex:
+            self.log(msg=f'{type(ex)}: {ex.args}; {ex}', logtype='fatal')
