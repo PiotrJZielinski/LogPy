@@ -258,3 +258,4 @@ class Logger:
                 pass
         except Exception as ex:
             self.log(msg=f'{type(ex)}: {ex.args}; {ex}', logtype='fatal')
+            raise ex
