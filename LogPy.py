@@ -1,6 +1,5 @@
 import datetime
 import os
-from threading import Timer
 
 
 class LogPy:
@@ -72,7 +71,7 @@ class LogPy:
 
     @property
     def logtype(self):
-        return list([key for key, ltype in self._logtypes.items() if ltype is self._logtype])
+        return list([key for key, ltype in self._logtypes.items() if ltype is self._logtype])[0]
 
     @logtype.setter
     def logtype(self, value):
@@ -118,7 +117,7 @@ class LogPy:
 
     @property
     def logexists(self):
-        return list([key for key, exists in self._ifexists.items() if exists is self._logexists])
+        return list([key for key, exists in self._ifexists.items() if exists is self._logexists])[0]
 
     @logexists.setter
     def logexists(self, value):
@@ -137,10 +136,12 @@ class LogPy:
 
         this will set boolean attribute to True, which will resume logging to the logfile"""
         if not self._enabled:
-            if not os.path.exists(self._directory):
-                print('WARNING: directory does not exist. Creating directory {dir}'.format(dir=self.directory))
-                os.makedirs(self._directory)
-            self._path = '{dir}/{filename}'.format(dir=self._directory, filename=self.filename)
+            if self.directory is not '':
+                if not os.path.exists(self.directory):
+                    print('WARNING: directory does not exist. Creating directory "{dir}"'.format(dir=self.directory))
+                    os.makedirs(self.directory)
+                self.directory = self.directory + '/'
+            self._path = '{dir}{filename}'.format(dir=self.directory, filename=self.filename)
             trials = 0
             # check if file exists
             if os.path.isfile(self._path):
@@ -156,7 +157,7 @@ class LogPy:
                              'o': 'overwrite', 'O': 'overwrite',
                              'r': 'rename', 'R': 'rename'}
                     prompt = 'Log file already exists. Choose action: {}/{}/{}: '.format(*actions)
-                    answer = input(prompt) or self.logexists
+                    answer = input(prompt) or self.logexists[0]
                     # set default action
                     try:
                         self.logexists = valid[answer]
