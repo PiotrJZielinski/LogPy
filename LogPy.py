@@ -3,14 +3,15 @@ import os
 
 
 class Logger:
-    """Main class for versatile Python Logger
+    """Class for versatile Python Logger
 
-    read documentation for usage instructions"""
+    read the documentation for usage instructions"""
 
     _path = None
 
     def __init__(self, filename='main.log', directory='', logtype='info', timestamp='%Y-%m-%d | %H:%M:%S.%f',
-                 logformat='[{timestamp}] {logtype}: {message}', prefix='', postfix='', logexists='append'):
+                 logformat='[{timestamp}] {logtype}: {message}', prefix='', postfix='', logexists='append',
+                 console=False):
         """Initialization method
 
         his will create logger object, prepare logfile and initialize log format
@@ -22,15 +23,18 @@ class Logger:
         :param prefix: string to prepend in the log
         :param postfix: string to append to the log
         :param logexists: default action if logfile exists; available: 'append', 'overwrite', 'rename'
+        :param console: print log messages
         """
 
         # boolean for running logger
         self._enabled = False
+        # print messages in console
+        self._console = console
         # create logfile and its directory
         self.filename = filename
         self.directory = directory
         # available log methods:
-        self._logtypes = {'info': self.info, 'warning': self.warning, 'error': self.error, 'fatal': self.fatal}
+        self._logtypes = ['info', 'warning', 'error', 'fatal']
         self.logtype = logtype
         # timestamp format
         self.timestamp = timestamp
@@ -71,12 +75,12 @@ class Logger:
 
     @property
     def logtype(self):
-        return list([key for key, ltype in self._logtypes.items() if ltype is self._logtype])[0]
+        return self._logtype
 
     @logtype.setter
     def logtype(self, value):
-        assert value in self._logtypes.keys()
-        self._logtype = self._logtypes[value]
+        assert value in self._logtypes
+        self._logtype = value
 
     @property
     def timestamp(self):
@@ -138,10 +142,10 @@ class Logger:
         if not self._enabled:
             if self.directory is not '':
                 if not os.path.exists(self.directory):
-                    print('WARNING: directory does not exist. Creating directory "{dir}"'.format(dir=self.directory))
+                    print(f'WARNING: directory does not exist. Creating directory "{self.directory}"')
                     os.makedirs(self.directory)
                 self.directory = self.directory + '/'
-            self._path = '{dir}{filename}'.format(dir=self.directory, filename=self.filename)
+            self._path = f'{self.directory}{self.filename}'
             trials = 0
             # check if file exists
             if os.path.isfile(self._path):
@@ -152,7 +156,7 @@ class Logger:
                     for i in range(len(actions)):
                         if actions[i] is self.logexists:
                             actions[i] = actions[i].upper()
-                        actions[i] = '({}){}'.format(actions[i][0], actions[i][1:])
+                        actions[i] = f'({actions[i][0]}){actions[i][1:]}'
                     valid = {'a': 'append', 'A': 'append',
                              'o': 'overwrite', 'O': 'overwrite',
                              'r': 'rename', 'R': 'rename'}
@@ -177,6 +181,28 @@ class Logger:
         this will clear current logfile without deleting it"""
         open(self._path, 'w').close()
 
+    def delete(self):
+        """Delete current logifle
+
+        this will remove current logfile from hard drive"""
+        self.pause()
+        os.remove(self._path)
+
+    def log(self, msg, logtype=''):
+        if msg[0] == '!':
+            with open(self._path, 'w') as file:
+                log = msg[1:]
+                print(log, file=file)
+                if self._console:
+                    print(log)
+        if logtype is '':
+            logtype = self.logtype
+        with open(self._path, 'w') as file:
+            log = self._logformat.format(timestamp=self.timestamp, logtype=logtype, message=msg, prefix=self.prefix, postfix=self.postfix)
+            print(log, file=file)
+            if self._console:
+                print(log)
+
     def _append(self):
         pass
 
@@ -186,14 +212,5 @@ class Logger:
     def _rename(self):
         pass
 
-    def info(self, msg):
-        pass
-
-    def warning(self, msg):
-        pass
-
-    def error(self, msg):
-        pass
-
-    def fatal(self, msg):
+    def run(self):
         pass
