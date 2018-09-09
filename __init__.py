@@ -1,1 +1,1 @@
-from LogPy import Logger
+from .LogPy import Logger
