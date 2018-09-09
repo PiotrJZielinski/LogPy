@@ -9,9 +9,9 @@ class Logger:
 
     _path = None
 
-    def __init__(self, filename='main.log', directory='', logtype='info', timestamp='%Y-%m-%d | %H:%M:%S.%f',
-                 logformat='[{timestamp}] {logtype}: {message}', prefix='', postfix='', logexists='append',
-                 console=False):
+    def __init__(self, filename='main', directory='', logtype='info', timestamp='%Y-%m-%d | %H:%M:%S.%f',
+                 logformat='[{timestamp}] {logtype}: {message}', prefix='', postfix='', title='Main Logger',
+                 logexists='append', console=False):
         """Initialization method
 
         his will create logger object, prepare logfile and initialize log format
@@ -22,6 +22,7 @@ class Logger:
         :param logformat: log configuration; available elements: 'timestamp', 'logtype', 'message', 'prefix', 'postfix'
         :param prefix: string to prepend in the log
         :param postfix: string to append to the log
+        :param title: string to be put on the top of the file
         :param logexists: default action if logfile exists; available: 'append', 'overwrite', 'rename'
         :param console: print log messages
         """
@@ -43,6 +44,8 @@ class Logger:
         # prefix & postfix
         self.prefix = prefix
         self.postfix = postfix
+        # log title
+        self.title = title
         # log-exists actions
         self._ifexists = {'append': self._append, 'overwrite': self._overwrite, 'rename': self._rename}
         self.logexists = logexists
@@ -71,7 +74,7 @@ class Logger:
     def filename(self, value):
         self.pause()
         assert isinstance(value, str)
-        self._filename = value
+        self._filename = value + '.log'
 
     @property
     def logtype(self):
@@ -118,6 +121,15 @@ class Logger:
     def postfix(self, value):
         assert isinstance(value, str)
         self._postfix = value
+
+    @property
+    def title(self):
+        return self._title
+
+    @title.setter
+    def title(self, value):
+        assert isinstance(value, str)
+        self._title = value
 
     @property
     def logexists(self):
@@ -169,10 +181,12 @@ class Logger:
                     except KeyError:
                         print('Incorrect choice. You have to select one of available actions.')
                         trials += 1
-                    self._logexists()
+                    finally:
+                        self._logexists()
             else:
                 # create empty file
                 open(self._path, 'a').close()
+            self.log(f'!    --== {self.title} ==--    ')
             self._enabled = True
 
     def clear(self):
@@ -190,27 +204,45 @@ class Logger:
 
     def log(self, msg, logtype=''):
         if msg[0] == '!':
-            with open(self._path, 'w') as file:
+            with open(self._path, 'a') as file:
                 log = msg[1:]
                 print(log, file=file)
                 if self._console:
+                    print(f'  LOGGER: {self.filename}')
                     print(log)
-        if logtype is '':
-            logtype = self.logtype
-        with open(self._path, 'w') as file:
-            log = self._logformat.format(timestamp=self.timestamp, logtype=logtype, message=msg, prefix=self.prefix, postfix=self.postfix)
-            print(log, file=file)
-            if self._console:
-                print(log)
+        else:
+            if logtype is '':
+                logtype = self.logtype
+            with open(self._path, 'a') as file:
+                log = self._logformat.format(timestamp=self.timestamp, logtype=logtype.upper(), message=msg, prefix=self.prefix, postfix=self.postfix)
+                print(log, file=file)
+                if self._console:
+                    print(f'  LOGGER: {self.filename}')
+                    print(log)
 
     def _append(self):
-        pass
+        self.log('! --- APPENDED --- ')
 
     def _overwrite(self):
-        pass
+        self.clear()
+        self.log('! --- FILE OVERWRITTEN --- ')
 
     def _rename(self):
-        pass
+        filename = self.filename[:-4]
+        num = 0
+        i = 0
+        for sign in reversed(filename):
+            try:
+                num += int(sign) * 10 ** (-i)
+                i -= 1
+            except ValueError:
+                if i != 0:
+                    self.filename = f'{filename[:i]}{num+1}'
+                else:
+                    self.filename = f'{filename}_{num+1}'
+                break
+        self._path = f'{self.directory}{self.filename}'
+        self.log('! --- FILE RENAMED --- ')
 
     def run(self):
         pass
