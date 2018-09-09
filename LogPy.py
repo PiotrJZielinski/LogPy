@@ -2,7 +2,7 @@ import datetime
 import os
 
 
-class LogPy:
+class Logger:
     """Main class for versatile Python Logger
 
     read documentation for usage instructions"""
