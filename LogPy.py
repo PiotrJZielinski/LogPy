@@ -11,12 +11,14 @@ class LogPy:
                  logformat='[{timestamp}] {logtype}: {message}', prefix='', postfix=''):
         """Initialization method
 
-        This will create logger object, prepare logfile and initialize log format
+        his will create logger object, prepare logfile and initialize log format
         :param filename: file to save log in
-        :param directory: directory where logfile is located
-        :param def_logtype: default log type; available: 'info', 'warning', 'error', 'fatal'
+        :param directory: directory where logfile is located; defaults to current directory
+        :param logtype: default log type; available: 'info', 'warning', 'error', 'fatal'
         :param timestamp: string used for defining (see datetime.strftime() for timestamp formatting details)
         :param logformat: log configuration; available elements: 'timestamp', 'logtype', 'message', 'prefix', 'postfix'
+        :param prefix: string to prepend in the log
+        :param postfix: string to append to the log
         """
 
         # boolean for running logger
@@ -25,7 +27,7 @@ class LogPy:
         self.filename = filename
         self.directory = directory
         # available log methods:
-        self._logtypes = {'info': self.info, 'warning': self.warning, 'error': self.error, 'fatal': self.fatal)
+        self._logtypes = {'info': self.info, 'warning': self.warning, 'error': self.error, 'fatal': self.fatal}
         self.logtype = logtype
         # timestamp format
         self.timestamp = timestamp
@@ -38,10 +40,16 @@ class LogPy:
         self.resume()
 
     def pause(self):
+        """Pause the logger
+
+        this will set boolean attribute to False, which will stop saving log to the logfile"""
         if self._enabled:
             self._enabled = False
 
     def resume(self):
+        """Resume logging
+
+        this will set boolean attribute to True, which will resume logging to the logfile"""
         if not self._enabled:
             if not os.path.exists(self._directory):
                 print('WARNING: directory does not exist. Creating directory {dir}'.format(dir=self.directory))
