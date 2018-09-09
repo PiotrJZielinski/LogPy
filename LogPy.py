@@ -8,6 +8,8 @@ class LogPy:
 
     read documentation for usage instructions"""
 
+    _path = None
+
     def __init__(self, filename='main.log', directory='', logtype='info', timestamp='%Y-%m-%d | %H:%M:%S.%f',
                  logformat='[{timestamp}] {logtype}: {message}', prefix='', postfix='', logexists='append'):
         """Initialization method
@@ -140,36 +142,39 @@ class LogPy:
                 os.makedirs(self._directory)
             self._path = '{dir}/{filename}'.format(dir=self._directory, filename=self.filename)
             trials = 0
-            while trials < 3:
-                # time limited user input defaulting to default log-exists action
-                timeout = Timer(5, print, ['Selected default: {}'.format(self.logexists)])
-                actions = list(self._ifexists.keys())
-                for i in range(len(actions)):
-                    if actions[i] is self.logexists:
-                        actions[i] = actions[i].upper()
-                    actions[i] = '({}){}'.format(actions[i][0], actions[i][1:])
-                valid = {'a': 'append', 'A': 'append',
-                         'o': 'overwrite', 'O': 'overwrite',
-                         'r': 'rename', 'R': 'rename'}
-                timeout.start()
-                prompt = 'Log file already exists. Choose action: {}/{}/{}'.format(*actions)
-                answer = input(prompt) or self.logexists[0]
-                timeout.cancel()
-                # set default action
-                try:
-                    self.logexists = valid[answer]
-                    break
-                except KeyError:
-                    print('Incorrect choice. You have to select one of available actions.')
-                    trials += 1
-            open(self._path, 'a').close()
+            # check if file exists
+            if os.path.isfile(self._path):
+                # actions for existing file
+                while trials < 3:
+                    # user input defaulting to preset log-exists action
+                    actions = list(self._ifexists.keys())
+                    for i in range(len(actions)):
+                        if actions[i] is self.logexists:
+                            actions[i] = actions[i].upper()
+                        actions[i] = '({}){}'.format(actions[i][0], actions[i][1:])
+                    valid = {'a': 'append', 'A': 'append',
+                             'o': 'overwrite', 'O': 'overwrite',
+                             'r': 'rename', 'R': 'rename'}
+                    prompt = 'Log file already exists. Choose action: {}/{}/{}: '.format(*actions)
+                    answer = input(prompt) or self.logexists
+                    # set default action
+                    try:
+                        self.logexists = valid[answer]
+                        break
+                    except KeyError:
+                        print('Incorrect choice. You have to select one of available actions.')
+                        trials += 1
+                    self._logexists()
+            else:
+                # create empty file
+                open(self._path, 'a').close()
             self._enabled = True
 
     def clear(self):
         """Clear current logfile
 
         this will clear current logfile without deleting it"""
-        pass
+        open(self._path, 'w').close()
 
     def _append(self):
         pass
