@@ -7,7 +7,7 @@ class LogPy:
 
     read documentation for usage instructions"""
 
-    def __init__(self, filename='main.log', directory='', def_logtype='info', timestamp='%Y-%m-%d | %H:%M:%S.%f',
+    def __init__(self, filename='main.log', directory='', logtype='info', timestamp='%Y-%m-%d | %H:%M:%S.%f',
                  logformat='[{timestamp}] {logtype}: {message}', prefix='', postfix=''):
         """Initialization method
 
@@ -19,27 +19,23 @@ class LogPy:
         :param logformat: log configuration; available elements: 'timestamp', 'logtype', 'message', 'prefix', 'postfix'
         """
 
+        # boolean for running logger
+        self._enabled = False
         # create logfile and its directory
         self.filename = filename
         self.directory = directory
-        self.resume()
         # available log methods:
-        self._logmethods = {'info': self.info, 'warning': self.warning, 'error': self.error, 'fatal': self.fatal}
-        assert def_logtype in self._logmethods.keys()
-        self._logdef = self._logmethods[def_logtype]
+        self._logtypes = {'info': self.info, 'warning': self.warning, 'error': self.error, 'fatal': self.fatal)
+        self.logtype = logtype
         # timestamp format
-        assert isinstance(timestamp, str)
-        self._timestamp = timestamp
+        self.timestamp = timestamp
         # message format
-        assert isinstance(logformat, str)
-        self._logformat = logformat
+        self.logformat = logformat
         # prefix & postfix
-        assert isinstance(prefix, str)
-        assert isinstance(postfix, str)
-        self._prefix = prefix
-        self._postfix = postfix
-        # boolean for running logger
-        self._enabled = True
+        self.prefix = prefix
+        self.postfix = postfix
+        # resume logger
+        self.resume()
 
     def pause(self):
         if self._enabled:
@@ -64,7 +60,6 @@ class LogPy:
         assert isinstance(value, str)
         self._directory = value
 
-
     @property
     def filename(self):
         return self._filename
@@ -75,9 +70,51 @@ class LogPy:
         assert isinstance(value, str)
         self._filename = value
 
+    @property
+    def logtype(self):
+        return list([key for key, ltype in self._logtypes.items() if ltype is self._logtype])
 
+    @logtype.setter
+    def logtype(self, value):
+        assert value in self._logtypes.keys()
+        self._logtype = self._logtypes[value]
 
+    @property
+    def timestamp(self):
+        return datetime.datetime.now().strftime(self._timestamp)
 
+    @timestamp.setter
+    def timestamp(self, value):
+        assert isinstance(value, str)
+        self._timestamp = value
+
+    @property
+    def logformat(self):
+        return self._logformat.format(timestamp=self.timestamp, logtype=self.logtype, message='logformat test',
+                                      prefix=self.prefix, postfix=self.postfix)
+
+    @logformat.setter
+    def logformat(self, value):
+        assert isinstance(value, str)
+        self._logformat = value
+
+    @property
+    def prefix(self):
+        return self._prefix
+
+    @prefix.setter
+    def prefix(self, value):
+        assert isinstance(value, str)
+        self._prefix = value
+
+    @property
+    def postfix(self):
+        return self._postfix
+
+    @postfix.setter
+    def postfix(self, value):
+        assert isinstance(value, str)
+        self._postfix = value
 
     def info(self, msg):
         pass
@@ -90,4 +127,3 @@ class LogPy:
 
     def fatal(self, msg):
         pass
-
