@@ -17,20 +17,64 @@ You can then (assuming you put LogPy module in your working directory) import it
 from LogPy.LogPy import Logger
 ```
 
+### Initialization
+
 The class is initialized with parameters:
 
 ```python
 Logger(filename='main', directory='', logtype='info', timestamp='%Y-%m-%d | %H:%M:%S.%f', logformat='[{timestamp}] {logtype}:   {message}', prefix='', postfix='', title='Main Logger', logexists='append', console=False):
 ```
 
-where 
-* *filename* is the name of the file in which you intend to put the log in;
-* *directory* is the directory in which you want to put the file; leaving it default puts the file in your working directory;
-* *logtype* is the default log message to use (one of: *info*, *warning*, *error*, *fatal*);
-* *timestamp* is the string used for defining (see datetime.strftime() for timestamp formatting details);
-* *logformat* is the log configuration (string containing variables: *timestamp*, *logtype*, *message*, *prefix*, *postfix*)
-* *prefix*
-* *postfix*
-* *title* is the string to be put on the top of the logfile
-* *logexists* is the default action to be performed in case logfile already exists (*append*, *overwrite* or *rename*)
-* *console* is a boolean specifying whether the logger should print messages in the console
+where:
+* `filename` is the name of the file in which you intend to put the log in;
+* `directory` is the directory in which you want to put the file; leaving it default puts the file in your working directory;
+* `logtype` is the default log message to use (one of: *info*, *warning*, *error*, *fatal*);
+* `timestamp` is the string used for defining (see datetime.strftime() for timestamp formatting details);
+* `logformat` is the log configuration (string containing variables: *timestamp*, *logtype*, *message*, *prefix*, *postfix*)
+* `prefix`
+* `postfix`
+* `title` is the string to be put on the top of the logfile
+* `logexists` is the default action to be performed in case logfile already exists (*append*, *overwrite* or *rename*)
+* `console` is a boolean specifying whether the logger should print messages in the console
+
+You can change most of these parameters during the operation of the program using property setters supplied in the module
+
+Methods such as *clear*, *delete*, *pause* and *resume* are to perform as they are named. They are provided with security checks and necessary features.
+
+### Logging
+
+For logging use the method
+
+```python
+log(msg, logtype=''):
+```
+
+where:
+* `msg` is the message to be put in the logfile
+* `logtype` is the log details put before the message (one of the available) - defaults to the type defined in the initialization
+
+Logging with a message starting with an exclamation mark (*'!'*) will disable all information, putting just the message in the row.
+
+### Running
+
+The class is desinging for running as a separate thread, which would provide exception catching for the log without interrupting main program execution and waiting for other instructions to execute. In order to take advantage of the threading use similar code:
+
+```python
+from threading import Thread
+
+from LogPy.LogPy import Logger
+
+logger = Logger()
+logger_thread = Thread(target=logger.run, name='My Logger')
+logger_thread.start()
+```
+
+From then on the thread will be running. To log something use the aforemention `log` method.
+
+In order to stop the logger from running (ie. at the end of your program) you have to set an exit flag. To do so simply type:
+
+```python
+logger.exit()
+```
+
+which will interrupt thread execution, terminating it.
