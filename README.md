@@ -57,7 +57,7 @@ Logging with a message starting with an exclamation mark (*'!'*) will disable al
 
 ### Running
 
-The class is desinging for running as a separate thread, which would provide exception catching for the log without interrupting main program execution and waiting for other instructions to execute. In order to take advantage of the threading use similar code:
+The class is designed for running as a separate thread, which would provide exception catching for the log without interrupting main program execution and waiting for other instructions to execute. In order to take advantage of the threading use similar code:
 
 ```python
 from threading import Thread
