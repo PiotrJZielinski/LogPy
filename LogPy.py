@@ -1,6 +1,6 @@
 import datetime
 import os
-from threading import Event
+from threading import Event, Lock
 
 
 class Logger:
@@ -28,6 +28,8 @@ class Logger:
         :param console: print log messages
         """
 
+        # lock for multithread access to logger
+        self.log_lock = Lock()
         # boolean for running logger
         self._enabled = False
         # print messages in console
@@ -206,23 +208,24 @@ class Logger:
         os.remove(self._path)
 
     def log(self, msg, logtype=''):
-        if msg[0] == '!':
-            with open(self._path, 'a') as file:
-                log = msg[1:]
-                print(log, file=file)
-                if self._console:
-                    print(f'  LOGGER: {self.filename}')
-                    print(log)
-        else:
-            if logtype is not '':
-                self.logtype = logtype
-            with open(self._path, 'a') as file:
-                log = self._logformat.format(timestamp=self.timestamp, logtype=self._logtype, message=msg,
-                                             prefix=self.prefix, postfix=self.postfix)
-                print(log, file=file)
-                if self._console:
-                    print(f'  LOGGER: {self.filename}')
-                    print(log)
+        with self.log_lock:
+            if msg[0] == '!':
+                with open(self._path, 'a') as file:
+                    log = msg[1:]
+                    print(log, file=file)
+                    if self._console:
+                        print(f'  LOGGER: {self.filename}')
+                        print(log)
+            else:
+                if logtype is not '':
+                    self.logtype = logtype
+                with open(self._path, 'a') as file:
+                    log = self._logformat.format(timestamp=self.timestamp, logtype=self._logtype, message=msg,
+                                                prefix=self.prefix, postfix=self.postfix)
+                    print(log, file=file)
+                    if self._console:
+                        print(f'  LOGGER: {self.filename}')
+                        print(log)
 
     def _append(self):
         self.log('! --- APPENDED --- ')
