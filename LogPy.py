@@ -1,6 +1,6 @@
 import datetime
 import os
-from threading import Event, Lock
+from threading import Event, Lock, Thread
 
 
 class Logger:
@@ -150,6 +150,14 @@ class Logger:
     def logexists(self, value):
         assert value in self._ifexists.keys()
         self._logexists = self._ifexists[value]
+
+    def start(self):
+        """Start logger in separate thread
+
+        this will create separate thread which start run method
+        """
+        log = Thread(target=self.run, name=self.title+' Thread')
+        log.start()
 
     def pause(self):
         """Pause the logger
