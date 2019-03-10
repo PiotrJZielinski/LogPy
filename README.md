@@ -36,6 +36,8 @@ where:
 * `title` is the string to be put on the top of the logfile
 * `logexists` is the default action to be performed in case logfile already exists (*append*, *overwrite* or *rename*)
 * `console` is a boolean specifying whether the logger should print messages in the console
+* `external_function` is a reference to function that returns string message for log
+* `internal_logger_time` delay between external function calls
 
 You can change most of these parameters during the operation of the program using property setters supplied in the module
 
@@ -55,6 +57,9 @@ where:
 
 Logging with a message starting with an exclamation mark (*'!'*) will disable all information, putting just the message in the row.
 
+### Periodically logging
+If you assign a reference to class to *external_function*, internal thread calls it at regullar intervals. Size of the intervals equals `internal_logger_time` value
+
 ### Running
 
 The class is designed for running as a separate thread, which would provide exception catching for the log without interrupting main program execution and waiting for other instructions to execute. In order to take advantage of the threading use similar code:
@@ -67,6 +72,12 @@ from LogPy.LogPy import Logger
 logger = Logger()
 logger_thread = Thread(target=logger.run, name='My Logger')
 logger_thread.start()
+```
+
+Alternative method for starting logger thread - call start method:
+```python
+logger = Logger()
+logger.start()
 ```
 
 From then on the thread will be running. To log something use the aforemention `log` method.
