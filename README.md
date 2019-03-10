@@ -57,7 +57,7 @@ where:
 
 Logging with a message starting with an exclamation mark (*'!'*) will disable all information, putting just the message in the row.
 
-### Periodically logging
+### Periodic logging
 If you assign a reference to class to *external_function*, internal thread calls it at regullar intervals. Size of the intervals equals `internal_logger_time` value
 
 ### Running
