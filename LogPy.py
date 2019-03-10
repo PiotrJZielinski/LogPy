@@ -12,7 +12,7 @@ class Logger:
 
     def __init__(self, filename='main', directory='', logtype='info', timestamp='%Y-%m-%d | %H:%M:%S.%f',
                  logformat='[{timestamp}] {logtype}:   {message}', prefix='', postfix='', title='Main Logger',
-                 logexists='append', console=False):
+                 logexists='append', console=False, external_function=None, internal_logger_time=1):
         """Initialization method
 
         his will create logger object, prepare logfile and initialize log format
@@ -26,8 +26,14 @@ class Logger:
         :param title: string to be put on the top of the file
         :param logexists: default action if logfile exists; available: 'append', 'overwrite', 'rename'
         :param console: print log messages
+        :param external_function: reference to function returning string called periodically to create log in logger
+        :param internal_logger_time: delay between external function calls in seconds
         """
 
+        # delay between external function calls
+        self.internal_logger_time = internal_logger_time
+        # reference to external function returning string for log message if None internal logger doesn't start
+        self.external_function = external_function
         # lock for multithread access to logger
         self.log_lock = Lock()
         # boolean for running logger
@@ -257,8 +263,13 @@ class Logger:
 
     def run(self):
         try:
-            while not self._exit_flag.wait(timeout=10):
-                pass
+            if self.external_function:
+                while not self._exit_flag.wait(timeout=self.internal_logger_time):
+                    msg = self.external_function()
+                    self.log(msg)
+            else:
+                while not self._exit_flag.wait(timeout=10):
+                    pass
         except Exception as ex:
             self.log(msg=f'{type(ex)}: {ex.args}; {ex}', logtype='fatal')
             raise ex
