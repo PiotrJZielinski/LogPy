@@ -17,6 +17,12 @@ You can then (assuming you put LogPy module in your working directory) import it
 from LogPy.LogPy import Logger
 ```
 
+You might as well install the package using pip:
+
+```
+pip install git+https://github.com/PiotrJZielinski/LogPy
+```
+
 ### Initialization
 
 The class is initialized with parameters:
